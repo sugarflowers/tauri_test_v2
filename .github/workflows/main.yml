@@ -15,11 +15,9 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
-      # --- ① リポジトリ取得 ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- ② Ubuntu 24.04 の依存（Tauri公式準拠） ---
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
@@ -33,7 +31,6 @@ jobs:
             libfuse2 \
             file
 
-      # --- ③ Rust のビルドキャッシュ ---
       - name: Cache Rust build
         uses: actions/cache@v4
         with:
@@ -43,50 +40,30 @@ jobs:
             src-tauri/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
 
-      # --- ④ Rust インストール ---
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # --- ⑤ tauri-cli（Rust製）をインストール ---
+      # ★★★ ここが重要：Rust製 tauri-cli をインストールする ★★★
       - name: Install tauri-cli
         run: cargo install tauri-cli
 
-      # --- ⑥ アイコン生成（Node不要 / Rust-only） ---
+      # ★★★ 正しいアイコン生成コマンド（Node不要） ★★★
       - name: Generate Tauri icons
         run: tauri icon ./icon.png
 
-      # --- ⑦ Rust-only Tauri のビルド ---
       - name: Build Tauri app
         working-directory: src-tauri
         run: cargo build --release
 
-      # --- ⑧ バージョン取得 ---
       - name: Get app version
         run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
 
-      # --- ⑨ アーティファクトアップロード（OS別） ---
-      - name: Upload Windows Portable EXE
-        if: runner.os == 'Windows'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: src-tauri/target/release/*.exe
+          name: build-artifacts
+          path: src-tauri/target/release/
 
-      - name: Upload macOS APP
-        if: runner.os == 'macOS'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-app
-          path: src-tauri/target/release/*.app
-
-      - name: Upload Linux AppImage
-        if: matrix.platform == 'ubuntu-24.04'
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-appimage
-          path: src-tauri/target/release/*.AppImage
-
-  # --- ⑩ Release 公開 ---
   release:
     needs: tauri-build
     runs-on: ubuntu-24.04
