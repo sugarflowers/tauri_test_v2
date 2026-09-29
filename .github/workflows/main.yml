@@ -37,6 +37,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -55,6 +56,11 @@ jobs:
         working-directory: src-tauri
         run: npx tauri build
 >>>>>>> parent of 5345278 (Revert "Update main.yml")
+=======
+      - name: Build Tauri app
+        working-directory: src-tauri
+        run: cargo build --release
+>>>>>>> parent of 294a503 (Update main.yml)
 
       - name: Install frontend dependencies
         run: npm ci
