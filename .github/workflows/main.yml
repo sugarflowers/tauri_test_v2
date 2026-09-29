@@ -16,18 +16,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # Ubuntu 依存関係（Tauri v2 Rust-only）
+      
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-24.04'
         run: |
-            sudo apt-get update
-            sudo apt-get install -y \
-              libwebkit2gtk-4.0-dev \
-              libappindicator3-dev \
-              librsvg2-dev \
-              libsoup3.0-dev \
-              patchelf
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.0-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            libsoup-3.0-dev \
+            libglib2.0-dev \
+            patchelf
+
 
 
       # Rust キャッシュ
@@ -72,7 +73,7 @@ jobs:
       # Linux（AppImage）
       # -----------------------------
       - name: Upload Linux AppImage
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-24.04'
         uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
