@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   tauri-build:
@@ -42,9 +43,23 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts'
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Generate Tauri icons
+        run: npx tauri icon ./icon.png
+
       - name: Build Tauri app
         working-directory: src-tauri
         run: cargo build --release
+
+      - name: Get app version
+        run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
 
       - name: Upload Windows Portable EXE
         if: runner.os == 'Windows'
@@ -66,3 +81,22 @@ jobs:
         with:
           name: linux-appimage
           path: src-tauri/target/release/*.AppImage
+
+  release:
+    needs: tauri-build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: Release v${{ env.APP_VERSION }}
+          files: artifacts/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
