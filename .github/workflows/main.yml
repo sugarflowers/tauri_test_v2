@@ -27,51 +27,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          #cache: 'npm'
-
+      # Rust ツールチェーンのセットアップ
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+      # Cargo キャッシュ（ビルド時間の短縮）
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+
+      # Linux の依存関係設定（Tauri v2 用）
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev
-=======
-      - name: Install Node (for tauri build)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
 
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli
-
-      - name: Build Tauri app
-        working-directory: src-tauri
-        run: npx tauri build
->>>>>>> parent of 5345278 (Revert "Update main.yml")
-=======
-      - name: Build Tauri app
-        working-directory: src-tauri
-        run: cargo build --release
->>>>>>> parent of 294a503 (Update main.yml)
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      # タグやリリースを作成せずにビルドのみを実行
+      # Frontend が Pure Rust の場合は Cargo 経由でビルドを実行
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         with:
           tagName: ''
+          # npm ではなく cargo tauri を使用するように指定
+          runner: cargo
 
-      # ビルドされたインストーラ・バイナリを Artifact としてアップロード
+      # 生成された成果物を Artifact としてアップロード
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
