@@ -43,13 +43,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # ★★★ ここが重要：Rust製 tauri-cli をインストールする ★★★
-      - name: Install tauri-cli
-        run: cargo install tauri-cli
-
-      # ★★★ 正しいアイコン生成コマンド（Node不要） ★★★
-      - name: Generate Tauri icons
-        run: tauri icon ./icon.png
+      # ★★★ アイコン生成ステップは不要（Tauri v2は自動生成） ★★★
 
       - name: Build Tauri app
         working-directory: src-tauri
