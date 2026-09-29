@@ -37,9 +37,17 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Node (for tauri build)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli
+
       - name: Build Tauri app
         working-directory: src-tauri
-        run: cargo build --release
+        run: npx tauri build
 
       - name: Get app version
         run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
