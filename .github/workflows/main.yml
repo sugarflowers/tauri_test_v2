@@ -60,13 +60,21 @@ jobs:
           name: macos-app
           path: src-tauri/target/release/*.app
 
-      # Linux
+      # macOS DMG（あなたの現状には無いので追加）
+      - name: Upload macOS DMG
+        if: runner.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+
+      # Linux AppImage（あなたの現状には無いので追加）
       - name: Upload Linux AppImage
         if: matrix.platform == 'ubuntu-24.04'
         uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
-          path: src-tauri/target/release/*.AppImage
+          path: src-tauri/target/release/bundle/appimage/*.AppImage
 
   release:
     needs: tauri-build
@@ -83,6 +91,10 @@ jobs:
         with:
           tag_name: v${{ env.APP_VERSION }}
           name: Release v${{ env.APP_VERSION }}
-          files: artifacts/**
+          files: |
+            artifacts/windows-exe/*.exe
+            artifacts/macos-app/*.app
+            artifacts/macos-dmg/*.dmg
+            artifacts/linux-appimage/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
