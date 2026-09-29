@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Ubuntu 依存関係（Tauri v2 用）
+      # Ubuntu 依存関係
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -34,10 +34,10 @@ jobs:
         with:
           node-version: 24
 
-      # npm install（ルートで実行するのが重要）
+      # npm install（必ずルートで）
       - name: Install dependencies
-        run: npm install
         working-directory: ${{ github.workspace }}
+        run: npm install
 
       # Rust キャッシュ
       - name: Cache Rust build
@@ -59,19 +59,17 @@ jobs:
           path: src-tauri/icons
           key: ${{ runner.os }}-tauri-icons-${{ hashFiles('icon.png') }}
 
-      # アイコン生成（v2 CLI で OK）
+      # アイコン生成（必ずルートで）
       - name: Generate Tauri icons
+        working-directory: ${{ github.workspace }}
         run: npx tauri icon ./icon.png
-        working-directory: ${{ github.workspace }}
 
-      # Build（必ずルートで実行）
+      # Build（必ずルートで）
       - name: Build Tauri app
-        run: npx tauri build
         working-directory: ${{ github.workspace }}
+        run: npx tauri build
 
-      # -----------------------------
-      # Windows（Portable EXE）
-      # -----------------------------
+      # Windows EXE
       - name: Upload Windows Portable EXE
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
@@ -79,9 +77,7 @@ jobs:
           name: windows-exe
           path: src-tauri/target/release/*.exe
 
-      # -----------------------------
-      # macOS（DMG / APP）
-      # -----------------------------
+      # macOS DMG
       - name: Upload macOS DMG
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
@@ -89,6 +85,7 @@ jobs:
           name: macos-dmg
           path: src-tauri/target/release/bundle/dmg/*.dmg
 
+      # macOS APP
       - name: Upload macOS APP
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
@@ -98,9 +95,7 @@ jobs:
             src-tauri/target/release/bundle/macos/*.app
             src-tauri/target/release/bundle/macos/app/*.app
 
-      # -----------------------------
-      # Linux（AppImage）
-      # -----------------------------
+      # Linux AppImage
       - name: Upload Linux AppImage
         if: matrix.platform == 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
