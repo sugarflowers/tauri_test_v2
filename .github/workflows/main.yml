@@ -9,7 +9,7 @@ jobs:
   tauri-build:
     strategy:
       matrix:
-        platform: ['windows-latest', 'macos-latest', 'ubuntu-22.04']
+        platform: ['windows-latest', 'macos-latest', 'ubuntu-24.04']
 
     runs-on: ${{ matrix.platform }}
 
