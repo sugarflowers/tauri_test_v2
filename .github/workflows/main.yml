@@ -34,19 +34,8 @@ jobs:
             libfuse2 \
             file
 
-      - name: Cache Rust build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-
-      # ★★★ アイコン生成ステップは不要（Tauri v2は自動生成） ★★★
 
       - name: Build Tauri app
         working-directory: src-tauri
@@ -55,18 +44,36 @@ jobs:
       - name: Get app version
         run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
 
-      - name: Upload artifacts
+      # Windows
+      - name: Upload Windows EXE
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
-          path: src-tauri/target/release/
+          name: windows-exe
+          path: src-tauri/target/release/*.exe
+
+      # macOS
+      - name: Upload macOS APP
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: src-tauri/target/release/*.app
+
+      # Linux
+      - name: Upload Linux AppImage
+        if: matrix.platform == 'ubuntu-24.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: src-tauri/target/release/*.AppImage
 
   release:
     needs: tauri-build
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
