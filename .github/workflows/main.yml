@@ -15,9 +15,11 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
+      # --- ① リポジトリ取得 ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --- ② Ubuntu 24.04 の依存（Tauri公式準拠） ---
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
@@ -31,6 +33,7 @@ jobs:
             libfuse2 \
             file
 
+      # --- ③ Rust のビルドキャッシュ ---
       - name: Cache Rust build
         uses: actions/cache@v4
         with:
@@ -40,16 +43,24 @@ jobs:
             src-tauri/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
 
+      # --- ④ Rust インストール ---
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # --- ⑤ アイコン生成（Rust-only / 正しいコマンド） ---
+      - name: Generate Tauri icons
+        run: cargo tauri icon ./icon.png
+
+      # --- ⑥ Rust-only Tauri のビルド ---
       - name: Build Tauri app
         working-directory: src-tauri
         run: cargo build --release
 
+      # --- ⑦ バージョン取得 ---
       - name: Get app version
         run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
 
+      # --- ⑧ アーティファクトアップロード（OS別） ---
       - name: Upload Windows Portable EXE
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
@@ -71,6 +82,7 @@ jobs:
           name: linux-appimage
           path: src-tauri/target/release/*.AppImage
 
+  # --- ⑨ Release 公開 ---
   release:
     needs: tauri-build
     runs-on: ubuntu-24.04
