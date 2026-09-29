@@ -47,20 +47,24 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # --- ⑤ アイコン生成（Rust-only / 正しいコマンド） ---
-      - name: Generate Tauri icons
-        run: cargo tauri icon ./icon.png
+      # --- ⑤ tauri-cli（Rust製）をインストール ---
+      - name: Install tauri-cli
+        run: cargo install tauri-cli
 
-      # --- ⑥ Rust-only Tauri のビルド ---
+      # --- ⑥ アイコン生成（Node不要 / Rust-only） ---
+      - name: Generate Tauri icons
+        run: tauri icon ./icon.png
+
+      # --- ⑦ Rust-only Tauri のビルド ---
       - name: Build Tauri app
         working-directory: src-tauri
         run: cargo build --release
 
-      # --- ⑦ バージョン取得 ---
+      # --- ⑧ バージョン取得 ---
       - name: Get app version
         run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
 
-      # --- ⑧ アーティファクトアップロード（OS別） ---
+      # --- ⑨ アーティファクトアップロード（OS別） ---
       - name: Upload Windows Portable EXE
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
@@ -82,7 +86,7 @@ jobs:
           name: linux-appimage
           path: src-tauri/target/release/*.AppImage
 
-  # --- ⑨ Release 公開 ---
+  # --- ⑩ Release 公開 ---
   release:
     needs: tauri-build
     runs-on: ubuntu-24.04
