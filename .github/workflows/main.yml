@@ -21,13 +21,13 @@ jobs:
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.0-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            libsoup-3.0-dev \
-            patchelf
+            sudo apt-get update
+            sudo apt-get install -y \
+              libwebkit2gtk-4.0-dev \
+              libappindicator3-dev \
+              librsvg2-dev \
+              libsoup3.0-dev \
+              patchelf
 
 
       # Rust キャッシュ
