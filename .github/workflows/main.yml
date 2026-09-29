@@ -23,11 +23,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libwebkitgtk-6.0-dev \
+            libjavascriptcoregtk-6.0-dev \
             libappindicator3-dev \
             librsvg2-dev \
             libsoup-3.0-dev \
             libglib2.0-dev \
             patchelf
+
 
 
 
