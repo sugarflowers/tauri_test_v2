@@ -1,4 +1,4 @@
-name: 'publish'
+name: publish
 
 permissions:
   contents: write
@@ -7,6 +7,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   tauri-build:
@@ -20,7 +21,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Ubuntu 依存関係（v2公式）
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
@@ -34,74 +34,39 @@ jobs:
             libfuse2 \
             file
 
-      # Node
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install
-
-      # Rust キャッシュ
-      - name: Cache Rust build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # アイコン生成（v2でも npx tauri icon は有効）
-      - name: Generate Tauri icons
-        run: npx tauri icon ./icon.png
-
-      # Build（v2は npx tauri build が正しい）
       - name: Build Tauri app
-        run: npx tauri build
+        working-directory: src-tauri
+        run: cargo build --release
 
-      # -----------------------------
-      # Windows（Portable EXE）
-      # -----------------------------
-      - name: Upload Windows Portable EXE
+      - name: Get app version
+        run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+
+      # Windows
+      - name: Upload Windows EXE
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
           path: src-tauri/target/release/*.exe
 
-      # -----------------------------
-      # macOS（DMG / APP）
-      # -----------------------------
-      - name: Upload macOS DMG
-        if: runner.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: src-tauri/target/release/bundle/dmg/*.dmg
-
+      # macOS
       - name: Upload macOS APP
         if: runner.os == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
           name: macos-app
-          path: src-tauri/target/release/bundle/macos/*.app
+          path: src-tauri/target/release/*.app
 
-      # -----------------------------
-      # Linux（AppImage）
-      # -----------------------------
+      # Linux
       - name: Upload Linux AppImage
         if: matrix.platform == 'ubuntu-24.04'
         uses: actions/upload-artifact@v4
         with:
           name: linux-appimage
-          path: src-tauri/target/release/bundle/appimage/*.AppImage
+          path: src-tauri/target/release/*.AppImage
 
   release:
     needs: tauri-build
@@ -116,8 +81,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
+          tag_name: v${{ env.APP_VERSION }}
+          name: Release v${{ env.APP_VERSION }}
           files: artifacts/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
