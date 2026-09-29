@@ -43,17 +43,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install frontend dependencies
-        run: npm install
-
-      - name: Generate Tauri icons
-        run: npx tauri icon ./icon.png
-
       - name: Build Tauri app
         working-directory: src-tauri
         run: cargo build --release
