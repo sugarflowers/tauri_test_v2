@@ -45,56 +45,45 @@ jobs:
         run: echo "APP_VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
 
       # Windows
-      - name: Upload Windows EXE
+      - name: Release Windows EXE
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-exe
-          path: src-tauri/target/release/*.exe
-
-      # macOS
-      - name: Upload macOS APP
-        if: runner.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-app
-          path: src-tauri/target/release/*.app
-
-      # macOS DMG（あなたの現状には無いので追加）
-      - name: Upload macOS DMG
-        if: runner.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-dmg
-          path: src-tauri/target/release/bundle/dmg/*.dmg
-
-      # Linux AppImage（あなたの現状には無いので追加）
-      - name: Upload Linux AppImage
-        if: matrix.platform == 'ubuntu-24.04'
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-appimage
-          path: src-tauri/target/release/bundle/appimage/*.AppImage
-
-  release:
-    needs: tauri-build
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ env.APP_VERSION }}
           name: Release v${{ env.APP_VERSION }}
-          files: |
-            artifacts/windows-exe/*.exe
-            artifacts/macos-app/*.app
-            artifacts/macos-dmg/*.dmg
-            artifacts/linux-appimage/*.AppImage
+          files: src-tauri/target/release/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # macOS DMG
+      - name: Release macOS DMG
+        if: runner.os == 'macos-latest'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: Release v${{ env.APP_VERSION }}
+          files: src-tauri/target/release/bundle/dmg/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # macOS APP
+      - name: Release macOS APP
+        if: runner.os == 'macos-latest'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: Release v${{ env.APP_VERSION }}
+          files: src-tauri/target/release/bundle/macos/*.app
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Linux AppImage
+      - name: Release Linux AppImage
+        if: matrix.platform == 'ubuntu-24.04'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: Release v${{ env.APP_VERSION }}
+          files: src-tauri/target/release/bundle/appimage/*.AppImage
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
