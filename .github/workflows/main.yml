@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Ubuntu 依存関係（v2 用）
+      # Ubuntu 依存関係（Tauri v2 用）
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -34,8 +34,10 @@ jobs:
         with:
           node-version: 24
 
+      # npm install（ルートで実行するのが重要）
       - name: Install dependencies
         run: npm install
+        working-directory: ${{ github.workspace }}
 
       # Rust キャッシュ
       - name: Cache Rust build
@@ -57,15 +59,18 @@ jobs:
           path: src-tauri/icons
           key: ${{ runner.os }}-tauri-icons-${{ hashFiles('icon.png') }}
 
+      # アイコン生成（v2 CLI で OK）
       - name: Generate Tauri icons
         run: npx tauri icon ./icon.png
+        working-directory: ${{ github.workspace }}
 
-      # Build
+      # Build（必ずルートで実行）
       - name: Build Tauri app
         run: npx tauri build
+        working-directory: ${{ github.workspace }}
 
       # -----------------------------
-      # Windows（Portable EXE のみ）
+      # Windows（Portable EXE）
       # -----------------------------
       - name: Upload Windows Portable EXE
         if: runner.os == 'Windows'
@@ -94,7 +99,7 @@ jobs:
             src-tauri/target/release/bundle/macos/app/*.app
 
       # -----------------------------
-      # Linux（AppImage のみ）
+      # Linux（AppImage）
       # -----------------------------
       - name: Upload Linux AppImage
         if: matrix.platform == 'ubuntu-22.04'
