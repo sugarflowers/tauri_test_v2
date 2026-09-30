@@ -16,13 +16,16 @@ jobs:
         include:
           - platform: 'macos-latest'
             artifact-name: 'app-macos'
-            args: "--target universal-apple-darwin --no-sign"
+            args: '--target universal-apple-darwin --no-sign'
           - platform: 'ubuntu-22.04'
             artifact-name: 'app-linux-x86_64'
+            args: ''
           - platform: 'ubuntu-24.04-arm'
             artifact-name: 'app-linux-arm64'
+            args: ''
           - platform: 'windows-latest'
             artifact-name: 'app-windows'
+            args: '--no-bundle'
 
     runs-on: ${{ matrix.platform }}
 
@@ -32,6 +35,8 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'x86_64-apple-darwin,aarch64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -49,7 +54,7 @@ jobs:
         with:
           tagName: ''
           uploadPlainBinary: true
-          args: ${{ matrix.platform == 'windows-latest' && '--no-bundle' || '' }}
+          args: ${{ matrix.args }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
